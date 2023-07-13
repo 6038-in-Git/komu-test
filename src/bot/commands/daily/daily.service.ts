@@ -37,6 +37,7 @@ export class DailyService {
     let hasPMRoleFlag = false;
     const thread = message.channel;
     const members = await thread.members.fetch();
+    console.log(members);
     const filteredMembers = members.filter(
       (member) => member.user != null && !member.user.bot
     );
