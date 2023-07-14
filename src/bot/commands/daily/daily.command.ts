@@ -10,8 +10,7 @@ import { logTimeSheetFromDaily } from "src/bot/utils/timesheet.until";
 import { UtilsService } from "src/bot/utils/utils.service";
 import { Repository } from "typeorm";
 import { DailyService } from "./daily.service";
-import { channel } from 'diagnostics_channel';
-import { Handler } from '@discord-nestjs/core';
+import { bool } from "@hapi/joi";
 
 const messHelp =
   "```" +
@@ -130,15 +129,16 @@ export class DailyCommand implements CommandLineClass {
   async execute(message: Message, args, client: Client) {
     try {
       const authorId = message.author.id;
-      // const findUser = await this.userRepository
-      //   .createQueryBuilder()
-      //   .where(`"userId" = :userId`, { userId: message.author.id })
-      //   .andWhere(`"deactive" IS NOT true`)
-      //   .select("*")
-      //   .getRawOne();
-      // if (!findUser) return;
-      //const authorUsername = findUser.email;
-      const authorUsername = message.author.username;
+      const findUser = await this.userRepository
+        .createQueryBuilder()
+        .where(`"userId" = :userId`, { userId: message.author.id })
+        .andWhere(`"deactive" IS NOT true`)
+        .select("*")
+        .getRawOne();
+      if (!findUser) return;
+      const authorUsername = findUser.email;
+      //const authorUsername = message.author.username;
+
       if (args[0] === "help") {
         return message
         .reply({
@@ -160,19 +160,17 @@ export class DailyCommand implements CommandLineClass {
           if (!wordInString(daily, q)) return (checkDaily = true);
         });
         const emailAddress = `${authorUsername}@ncc.asia`;
-        console.log(emailAddress);
 
-        let validChanel = (await this.dailyService.handleThreadChannel(message)).valueOf();
-        
-        console.log(validChanel);
-        if(!validChanel){
+        const validChannel = (await this.dailyService.handleTextChannel(message)).valueOf();
+        if (!validChannel)
+        {
           return message
-          .reply({
-            content: "```wrong chanel```",
-          })
-          .catch((err) => {
-            
-          });
+            .reply({
+              content: "Channel must have at least 2 Members and 1 PM to daily !",
+            })
+            .catch((err) => {
+              this.komubotrestService.sendErrorToDevTest(client, authorId, err);
+            });
         }
 
         if (checkDaily) {
@@ -193,7 +191,7 @@ export class DailyCommand implements CommandLineClass {
               // ephemeral: true,
             })
             .catch((err) => {
-              this.komubotrestService.sendErrorToDevTest(client, authorId, err);
+              console.log(err);
             });
         }
 
@@ -208,6 +206,8 @@ export class DailyCommand implements CommandLineClass {
               this.komubotrestService.sendErrorToDevTest(client, authorId, err);
             });
         }
+
+
 
         // if (findPeriod(daily)) {
         //   return message

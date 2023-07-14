@@ -25,6 +25,7 @@ export class DmmessageService {
   API_URL = "http://172.16.100.196:8000/query/?query=";
 
   async getMessageAI(url, sender, message, token) {
+    console.log(url)
     try {
       const response = await firstValueFrom(
         this.http
@@ -71,6 +72,8 @@ export class DmmessageService {
       const createdTimestamp = message.createdTimestamp;
       const authorId = message.author.id;
       const content = message.content;
+      const defaultReply = "Very busy, too much work today. I'm so tired. (DM)";
+      
 
       const data = await this.dmMessageRepository
         .createQueryBuilder()
@@ -92,19 +95,27 @@ export class DmmessageService {
         `${content}`,
         this.API_TOKEN
       );
-      
-
-
+    
       const reply = res.data.answer;
-      
       if (res && res.data && res.data.length) {
         res.data.map((item) => {
-          return message.channel.send(item.text).catch(console.log);
+          message.channel.send(item.text).catch(console.log);
+          return;
         });
-      } else {
-        message.channel
-          .send(reply)
+      } else 
+      {
+        if (res == null || res.data == null || res.data.answer == null)
+        {
+          message.channel
+          .send(defaultReply)
           .catch(console.error);
+        }
+        else
+        {
+          message.channel
+          .send(res.data.answer)
+          .catch(console.error);
+        }
         return;
       }
       if (data) {

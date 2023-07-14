@@ -76,7 +76,6 @@ export class DailyService {
     members.forEach((member) => {
       if (this.hasPMRole(member)) {
         hasPMRoleFlag = true;
-        return;
       }
     });
 
